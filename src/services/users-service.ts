@@ -61,3 +61,41 @@ export async function loginUser(email: string, password: string) {
   // 5. Return token
   return { data: token };
 }
+
+export async function getCurrentUser(token: string) {
+  // 1. Cari session berdasarkan token
+  const sessionResult = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.token, token))
+    .limit(1);
+
+  if (sessionResult.length === 0) {
+    return { data: "Unauthorized" };
+  }
+
+  const session = sessionResult[0];
+
+  // 2. Cari user berdasarkan userId
+  const userResult = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, session.userId))
+    .limit(1);
+
+  if (userResult.length === 0) {
+    return { data: "Unauthorized" };
+  }
+
+  const user = userResult[0];
+
+  // 3. Return user data (tanpa password)
+  return {
+    data: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      created_at: user.createdAt,
+    },
+  };
+}
